@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Crononauta: Viaje al Siglo XIX</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap');
+        :root { --bg-color: #0f172a; --panel-bg: #1e293b; --text-color: #f8fafc; --primary: #8b5cf6; --primary-hover: #7c3aed; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: radial-gradient(circle at top right, #2e1065, transparent 40%), radial-gradient(circle at bottom left, #1e1b4b, transparent 40%); }
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; margin: 0; }
+        #setup-screen { background: var(--panel-bg); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 600px; width: 100%; border: 1px solid #334155; }
+        #setup-screen h1 { font-size: 2.5rem; margin-bottom: 20px; background: -webkit-linear-gradient(#a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        #setup-screen p { font-size: 1.2rem; color: #94a3b8; margin-bottom: 30px; }
+        .team-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .team-btn { padding: 15px 25px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; background: #334155; color: white; }
+        .team-btn:hover { transform: translateY(-3px); background: var(--primary); }
+        .team-btn.selected { background: var(--primary); border: 2px solid #fff; box-shadow: 0 0 15px var(--primary); }
+        #start-btn { padding: 15px 40px; font-size: 1.5rem; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; background: linear-gradient(90deg, #8b5cf6, #ec4899); color: white; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(236, 72, 153, 0.4); display: none; }
+        #start-btn:hover { transform: scale(1.05); }
+        #game-screen { display: none; max-width: 1000px; width: 100%; margin: 0 auto; }
+        #scoreboard { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .team-score { padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 1.2rem; background: #1e293b; border-left: 5px solid; transition: all 0.3s; }
+        .team-score.active { transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.2); background: #334155; }
+        #game-container { background: var(--panel-bg); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Contenedor de imagen */
+        #image-container { 
+            width: 100%; 
+            height: 300px; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            margin-bottom: 25px; 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border: 2px solid #334155; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        
+        /* Imagen */
+        #question-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: none; 
+        }
+
+        /* Mensaje si no hay imagen */
+        #no-image-msg {
+            color: #64748b;
+            font-size: 1.2rem;
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #question-box { font-size: 1.6rem; text-align: center; margin-bottom: 25px; font-weight: 500; line-height: 1.3; }
+        #turn-indicator { font-size: 1.2rem; margin-bottom: 15px; font-weight: bold; background: #334155; padding: 8px 20px; border-radius: 20px; }
+        #options-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        .option { padding: 20px; font-size: 1.3rem; background: #334155; color: white; border: 2px solid #475569; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; }
+        .option:hover { background: #475569; transform: translateY(-2px); border-color: #8b5cf6; }
+        .option.correct { background: #10b981; border-color: #059669; color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .option.incorrect { background: #ef4444; border-color: #b91c1c; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        #feedback { font-size: 1.5rem; font-weight: bold; margin-top: 20px; min-height: 40px; text-align: center; }
+        #next-btn { margin-top: 20px; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 10px; background: var(--primary); color: white; cursor: pointer; display: none; transition: background 0.2s; }
+        #next-btn:hover { background: var(--primary-hover); }
+        @media (max-width: 768px) { #options-container { grid-template-columns: 1fr; } #question-box { font-size: 1.3rem; } #image-container { height: 200px; } }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <h1>El Crononauta</h1>
+        <p>Selecciona cuántos equipos van a competir:</p>
+        <div class="team-selector">
+            <button class="team-btn" onclick="setTeams(2)">2 Equipos</button>
+            <button class="team-btn" onclick="setTeams(3)">3 Equipos</button>
+            <button class="team-btn" onclick="setTeams(4)">4 Equipos</button>
+            <button class="team-btn" onclick="setTeams(5)">5 Equipos</button>
+        </div>
+        <button id="start-btn" onclick="startGame()">¡Iniciar Misión!</button>
+    </div>
+
+    <div id="game-screen">
+        <div id="scoreboard"></div>
+        <div id="game-container">
+            <div id="turn-indicator">Turno</div>
+            
+            <div id="image-container">
+                <img id="question-image" src="" alt="Imagen Histórica">
+                <div id="no-image-msg">🖼️ Imagen no disponible en esta versión local.</div>
+            </div>
+
+            <div id="question-box">Pregunta</div>
+            <div id="options-container"></div>
+            <div id="feedback"></div>
+            <button id="next-btn" onclick="nextTurn()">Siguiente Pregunta</button>
+        </div>
+    </div>
+
+    <script>
+        const teamColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+        const teamNames = ['Rojo', 'Azul', 'Verde', 'Naranja', 'Morado'];
+        let numTeams = 0, currentTeam = 0, scores = [], currentQuestionIndex = 0, questions = [], canAnswer = true;
+
+        // Rutas a las imágenes locales (deben estar en la carpeta 'imagenes_juego')
+        const localImages = [
+            "imagenes_juego/img_0.jpg", "imagenes_juego/img_1.jpg", "imagenes_juego/img_2.jpg", 
+            "imagenes_juego/img_3.jpg", "imagenes_juego/img_4.jpg", "imagenes_juego/img_5.jpg", 
+            "imagenes_juego/img_6.jpg", "imagenes_juego/img_7.jpg", "imagenes_juego/img_8.jpg", 
+            "imagenes_juego/img_9.jpg", "imagenes_juego/img_10.jpg", "imagenes_juego/img_11.jpg", 
+            "imagenes_juego/img_12.jpg", "imagenes_juego/img_13.jpg", "imagenes_juego/img_14.jpg", 
+            "imagenes_juego/img_15.jpg", "imagenes_juego/img_16.jpg", "imagenes_juego/img_17.jpg", 
+            "imagenes_juego/img_18.jpg", "imagenes_juego/img_19.jpg", "imagenes_juego/img_20.jpg", 
+            "imagenes_juego/img_21.jpg", "imagenes_juego/img_22.jpg", "imagenes_juego/img_23.jpg", 
+            "imagenes_juego/img_24.jpg"
+        ];
+
+        const allQuestions = [
+            { q: "¿Qué código garantizó la igualdad ante la ley durante el Imperio Napoleónico?", options: ["Código de Hammurabi", "Código Civil Napoleónico", "Código de Justiniano", "Carta Magna"], correct: 1, imgIndex: 0 },
+            { q: "¿Qué batalla en 1815 supuso la derrota definitiva de Napoleón?", options: ["Austerlitz", "Waterloo", "Verdún", "Leipzig"], correct: 1, imgIndex: 1 },
+            { q: "¿Qué principio impuso el Congreso de Viena de 1815?", options: ["Soberanía Nacional", "Legitimismo de los reyes absolutos", "Sufragio Universal", "El liberalismo"], correct: 1, imgIndex: 2 },
+            { q: "¿Qué inventor perfeccionó la máquina de vapor en 1769?", options: ["Thomas Edison", "James Watt", "George Stephenson", "Karl Benz"], correct: 1, imgIndex: 3 },
+            { q: "¿Quién formuló el Marxismo junto a Friedrich Engels?", options: ["Mijaíl Bakunin", "Karl Marx", "Adam Smith", "John Locke"], correct: 1, imgIndex: 4 },
+            { q: "¿Qué ideología rechaza cualquier forma de Estado o autoridad?", options: ["Marxismo", "Anarquismo", "Liberalismo", "Absolutismo"], correct: 1, imgIndex: 5 },
+            { q: "¿Quién convocó la Conferencia de Berlín en 1884?", options: ["El canciller Bismarck", "Napoleón", "Woodrow Wilson", "El rey Leopoldo II"], correct: 0, imgIndex: 6 },
+            { q: "¿Qué regla se impuso en la Conferencia de Berlín para poseer África?", options: ["La llegada a la costa", "La ocupación efectiva del territorio", "Comprar tierras", "Ganar una guerra"], correct: 1, imgIndex: 7 },
+            { q: "¿Qué evento fue el detonante de la Primera Guerra Mundial?", options: ["El hundimiento del Titanic", "El asesinato de Francisco Fernando", "La invasión de Polonia", "El Motín del Té"], correct: 1, imgIndex: 8 },
+            { q: "¿Qué tratado de 1919 impuso durísimas condiciones a Alemania?", options: ["Tratado de Viena", "Tratado de Versalles", "Tratado de Utrecht", "Tratado de París"], correct: 1, imgIndex: 9 },
+            { q: "¿Quién propuso la separación de poderes?", options: ["Rousseau", "Montesquieu", "John Locke", "Diderot"], correct: 1, imgIndex: 10 },
+            { q: "¿Qué rey Borbón ganó la Guerra de Sucesión e implantó los Decretos de Nueva Planta?", options: ["Carlos III", "Felipe V", "Carlos II", "Felipe VI"], correct: 1, imgIndex: 11 },
+            { q: "¿En qué año se proclamó la Independencia de los Estados Unidos?", options: ["1776", "1789", "1812", "1492"], correct: 0, imgIndex: 12 },
+            { q: "¿Qué acontecimiento ocurrió el 14 de julio de 1789?", options: ["La ejecución de Luis XVI", "La Toma de la Bastilla", "El Golpe de Napoleón", "El Motín del Té"], correct: 1, imgIndex: 13 },
+            { q: "¿Quién escribió la Declaración de los Derechos de la Mujer en 1791?", options: ["Olympe de Gouges", "María Antonieta", "Madame Geoffrin", "Juana de Arco"], correct: 0, imgIndex: 14 },
+            { q: "¿Qué teoría económica afirmaba que la agricultura era la fuente de riqueza?", options: ["Fisiocracia", "Capitalismo", "Marxismo", "Mercantilismo"], correct: 0, imgIndex: 15 },
+            { q: "¿Quién lideró la etapa de 'El Terror'?", options: ["Napoleón", "Robespierre", "Luis XVI", "Olympe de Gouges"], correct: 1, imgIndex: 16 },
+            { q: "¿Qué movimiento obrero destruía máquinas por considerarlas culpables del desempleo?", options: ["Marxismo", "Anarquismo", "Ludismo", "Taylorismo"], correct: 2, imgIndex: 17 },
+            { q: "¿Cómo se conoce al período previo a 1914 de carrera de armamentos?", options: ["Paz Armada", "Guerra Fría", "La Primavera de los Pueblos", "La Belle Époque"], correct: 0, imgIndex: 18 },
+            { q: "¿Qué territorio cedió España a Gran Bretaña en el Tratado de Utrecht?", options: ["Menorca y Gibraltar", "Cuba y Puerto Rico", "Florida y Texas", "Las Islas Canarias"], correct: 0, imgIndex: 19 },
+            { q: "¿Qué grupo social rico del Tercer Estado impulsó las revoluciones liberales?", options: ["El Clero", "La Nobleza", "La Burguesía", "El Proletariado"], correct: 2, imgIndex: 20 },
+            { q: "¿Qué país se retiró de la Primera Guerra Mundial en 1917?", options: ["Alemania", "Rusia", "Francia", "Italia"], correct: 1, imgIndex: 21 },
+            { q: "¿Qué monarquía aplicó reformas ilustradas sin dar poder al pueblo?", options: ["Monarquía Absoluta", "Despotismo Ilustrado", "Monarquía Parlamentaria", "República"], correct: 1, imgIndex: 22 },
+            { q: "¿Qué ideología buscaba eliminar el Estado mediante comunas autogestionadas?", options: ["Anarquismo", "Marxismo", "Burguesía", "Paz Armada"], correct: 0, imgIndex: 23 },
+            { q: "¿Qué asamblea de 1815 intentó restaurar el Antiguo Régimen?", options: ["Congreso de Viena", "Conferencia de Berlín", "Tratado de Versalles", "La Enciclopedia"], correct: 0, imgIndex: 24 }
+        ];
+
+        function setTeams(num) {
+            numTeams = num;
+            document.querySelectorAll('.team-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('start-btn').style.display = 'inline-block';
+        }
+
+        function startGame() {
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            scores = new Array(numTeams).fill(0);
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = '';
+            for (let i = 0; i < numTeams; i++) {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-score';
+                teamDiv.id = `score-team-${i}`;
+                teamDiv.style.borderLeftColor = teamColors[i];
+                teamDiv.style.color = teamColors[i];
+                teamDiv.innerHTML = `Equipo ${teamNames[i]}: <span id="points-${i}">0</span>`;
+                scoreboard.appendChild(teamDiv);
+            }
+            questions = [...allQuestions].sort(() => Math.random() - 0.5);
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) { endGame(); return; }
+            canAnswer = true;
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('options-container').innerHTML = '';
+            document.querySelectorAll('.team-score').forEach(el => el.classList.remove('active'));
+            document.getElementById(`score-team-${currentTeam}`).classList.add('active');
+
+            const q = questions[currentQuestionIndex];
+            const imgEl = document.getElementById('question-image');
+            const noImageMsg = document.getElementById('no-image-msg');
+
+            // Ocultar mensaje por defecto
+            noImageMsg.style.display = 'none';
+            imgEl.style.display = 'block';
+
+            // Si la imagen local falla, mostramos el mensaje y ocultamos el icono roto
+            imgEl.onerror = function() {
+                this.style.display = 'none';
+                noImageMsg.style.display = 'block';
+            };
+            
+            // Asignar imagen local
+            imgEl.src = localImages[q.imgIndex];
+
+            document.getElementById('turn-indicator').innerText = `Turno del Equipo ${teamNames[currentTeam]}`;
+            document.getElementById('turn-indicator').style.color = teamColors[currentTeam];
+            document.getElementById('question-box').innerText = q.q;
+
+            const optionsContainer = document.getElementById('options-container');
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.innerHTML = `<strong style="margin-right: 10px;">${String.fromCharCode(65 + index)})</strong> ${opt}`;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btn) {
+            if (!canAnswer) return;
+            canAnswer = false;
+            const q = questions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.option');
+            buttons.forEach(b => b.style.pointerEvents = 'none');
+            if (selectedIndex === q.correct) {
+                btn.classList.add('correct');
+                document.getElementById('feedback').style.color = '#10b981';
+                document.getElementById('feedback').innerText = "¡Correcto! +10 Puntos";
+                scores[currentTeam] += 10;
+                document.getElementById(`points-${currentTeam}`).innerText = scores[currentTeam];
+            } else {
+                btn.classList.add('incorrect');
+                buttons[q.correct].classList.add('correct');
+                document.getElementById('feedback').style.color = '#ef4444';
+                document.getElementById('feedback').innerText = "¡Fallo! La respuesta correcta era la verde.";
+            }
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextTurn() {
+            currentQuestionIndex++;
+            currentTeam = (currentTeam + 1) % numTeams;
+            loadQuestion();
+        }
+
+        function endGame() {
+            document.getElementById('question-box').innerText = "¡Misión Cumplida!";
+            document.getElementById('options-container').innerHTML = '';
+            document.getElementById('image-container').style.display = 'none';
+            document.getElementById('turn-indicator').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('feedback').innerHTML = '';
+            let maxScore = Math.max(...scores);
+            let winners = [];
+            scores.forEach((score, index) => { if (score === maxScore) winners.push(`Equipo ${teamNames[index]}`); });
+            let msg = `<h3 style="font-size: 2rem; color: #fbbf24; margin-bottom: 20px;">🏆 ¡FIN DEL JUEGO! 🏆</h3>`;
+            if (winners.length === 1) {
+                msg += `<p style="font-size: 1.5rem;">El ganador es: <strong>${winners[0]}</strong> con ${maxScore} puntos.</p>`;
+            } else {
+                msg += `<p style="font-size: 1.5rem;">¡Empate entre: <strong>${winners.join(' y ')}</strong> con ${maxScore} puntos!</p>`;
+            }
+            msg += `<br><button onclick="location.reload()" style="padding: 10px 15px; font-size: 1.2rem; background: #8b5cf6; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top:20px;">Volver a Jugar</button>`;
+            document.getElementById('feedback').innerHTML = msg;
+        }
+    </script>
+</body>
+</html>
